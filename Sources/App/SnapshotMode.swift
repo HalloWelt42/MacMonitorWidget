@@ -58,6 +58,14 @@ enum SnapshotMode {
         renderWidget(WidgetMedium(snapshot: snapshot), to: "\(outputDirectory)/widget-mittel.png", width: 360, height: 170)
         renderWidget(WidgetLarge(snapshot: snapshot), to: "\(outputDirectory)/widget-gross.png", width: 360, height: 360)
 
+        // Chip-Übersicht als extragroßes Widget: über einem Schreibtisch-Verlauf
+        // (halbtransparent wie im Betrieb) und deckend zum Vergleich mit der Vorlage.
+        for (name, size) in [("chip-widget", CGSize(width: 715, height: 340)), ("chip-widget-schmal", CGSize(width: 650, height: 310))] {
+            renderChipBoard(trace: trace, to: "\(outputDirectory)/\(name).png", size: size, translucent: true)
+        }
+        renderChipBoard(trace: trace, to: "\(outputDirectory)/chip-widget-deckend.png",
+                        size: CGSize(width: 715, height: 340), translucent: false)
+
         print("Snapshots geschrieben nach \(outputDirectory)")
         print(String(format: "Werte: CPU %.0f%%  RAM %.0f%%  GPU %@  Energie %@",
                      snapshot.cpu * 100,
@@ -75,6 +83,44 @@ enum SnapshotMode {
             .environment(\.colorScheme, .dark)
 
         let renderer = ImageRenderer(content: wrapped)
+        renderer.scale = 2
+        guard let image = renderer.nsImage,
+              let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else {
+            print("Render fehlgeschlagen: \(path)")
+            return
+        }
+        try? png.write(to: URL(fileURLWithPath: path))
+    }
+
+    private static func renderChipBoard(trace: ChipTrace, to path: String, size: CGSize, translucent: Bool) {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        let wallpaper = LinearGradient(colors: [Color(red: 0.32, green: 0.45, blue: 0.62), Color(red: 0.75, green: 0.55, blue: 0.45)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+        let view = ZStack {
+            wallpaper
+            ZStack {
+                if translucent {
+                    Rectangle().fill(.ultraThinMaterial)
+                    TerminalTheme.background.opacity(TerminalTheme.widgetTint)
+                } else {
+                    TerminalTheme.background
+                }
+                ChipBoard(trace: trace, version: version)
+                    .padding(TerminalTheme.widgetPadding)
+            }
+            .frame(width: size.width, height: size.height)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .padding(24)
+        }
+        .frame(width: size.width + 48, height: size.height + 48)
+        .environment(\.colorScheme, .dark)
+        write(view, to: path)
+    }
+
+    private static func write<V: View>(_ view: V, to path: String) {
+        let renderer = ImageRenderer(content: view)
         renderer.scale = 2
         guard let image = renderer.nsImage,
               let tiff = image.tiffRepresentation,

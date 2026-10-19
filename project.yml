@@ -33,6 +33,7 @@ targets:
         CFBundleDisplayName: Leitwarte
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "1"
+        CFBundleIconFile: AppIcon
         LSUIElement: true
         LSMinimumSystemVersion: "14.0"
     settings:

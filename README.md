@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.png" width="160" alt="Leitwarte"></p>
+
 # Leitwarte
 
 Ein nativer Systemmonitor für macOS - als Menüleisten-Programm und als
@@ -34,6 +36,9 @@ Berechtigungsdialoge:
 - **Temperatur** - über IOHID-Sensoren (Mittel der Die-Sensoren)
 - **Lüfter** - Drehzahl über SMC (`F<n>Ac`); steht im Leerlauf still
 - **Swap** - Auslagerungsdatei über `sysctl vm.swapusage`
+- **Takt** - mittlerer Takt und Auslastung je CPU-Cluster und GPU über die
+  IOReport-Verweildauern je Taktstufe
+- **Neural Engine** - Leistung in Watt über IOReport
 
 ## Schreibtisch-Widget
 
@@ -47,6 +52,31 @@ mittel, groß), das du wie jedes andere Widget aus der Galerie hinzufügst
   selbst messen. Die übrigen Werte (GPU, Energie, Temperatur) liefert das
   laufende Menüleisten-Programm über eine geteilte App-Gruppe - läuft es nicht,
   zeigt das Widget CPU und RAM.
+
+## Chip-Übersicht (extragroßes Widget)
+
+![Chip-Übersicht](docs/chip-widget.png)
+
+Ein zweites Widget zeigt den Apple-Silicon-Chip im Terminal-Stil auf dem
+Schreibtisch - halbtransparent in Petrol und Salbeigrün:
+
+- **E-CPU und P-CPU** - Auslastung und mittlerer Takt je Cluster (z. B.
+  `24% @ 1833 MHz`) mit Verlauf. Die Auslastung ist auf den Höchsttakt
+  bezogen: ein Kern, der voll, aber mit halbem Takt läuft, zählt etwa zur Hälfte.
+- **GPU** - Auslastung und Takt mit Verlauf
+- **RAM und Swap** - belegt und gesamt in GB, Verlauf des Arbeitsspeichers
+- **Leistung** - CPU, GPU und Neural Engine in Watt mit Mittel und Höchstwert
+  des Verlaufs, dazu CPU- und GPU-Temperatur, Lüfterdrehzahlen und die
+  Gesamtleistung des Rechners
+
+Takt und Auslastung stammen aus den Verweildauern je Taktstufe (IOReport
+"CPU Stats" und "GPU Stats"), die Taktstufen selbst aus dem IORegistry
+(`pmgr`). Die Kopfzeile nennt Chip, Kernzahlen und Speicher; unten steht, wie
+alt die Werte sind. Läuft das Menüleisten-Programm nicht, meldet das Widget den
+Stand der letzten Messung.
+
+Das Widget gibt es in der Größe "Extragroß" und nur auf dem Schreibtisch (die
+Mitteilungszentrale bietet diese Größe nicht an).
 
 ## Anforderungen
 
@@ -66,13 +96,26 @@ Menüleisten-Programm läuft ohne Dock-Symbol.
 Zur kopflosen Kontrolle des Datenkerns gibt es einen Diagnosemodus:
 
 ```
-.build/debug/Leitwarte --dump        # Messwerte einmalig auf der Konsole
-.build/debug/Leitwarte --snapshot DIR # Bausteine als PNG nach DIR rendern
+.build/debug/Leitwarte --dump             # Messwerte einmalig auf der Konsole
+.build/debug/Leitwarte --dump --channels  # zusätzlich alle IOReport-Kanäle und Fühler
+.build/debug/Leitwarte --snapshot DIR      # Bausteine und Widgets als PNG nach DIR
 ```
+
+Das Programmsymbol wird mit `swift tools/make_icon.swift` gezeichnet.
+
+## Version
+
+Die Version steht allein in `version.json`. Ein Pre-Commit-Hook
+(`tools/git-hooks`, aktiviert mit `git config core.hooksPath tools/git-hooks`)
+zählt sie bei jedem Commit hoch; das Bauskript reicht sie an Programm und
+Widget weiter.
 
 ## Lizenz
 
 Nicht-kommerzielle Lizenz v1.0 - siehe [LICENSE](LICENSE).
+
+Das Widget bringt die Schrift JetBrains Mono mit; sie steht unter der SIL Open
+Font License 1.1 ([Sources/Widget/Fonts/OFL.txt](Sources/Widget/Fonts/OFL.txt)).
 
 ## Unterstützen
 

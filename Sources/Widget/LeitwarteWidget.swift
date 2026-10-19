@@ -87,5 +87,6 @@ struct LeitwarteWidget: Widget {
 struct LeitwarteWidgetBundle: WidgetBundle {
     var body: some Widget {
         LeitwarteWidget()
+        ChipWidget()
     }
 }
