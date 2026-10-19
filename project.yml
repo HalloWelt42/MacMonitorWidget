@@ -1,0 +1,61 @@
+name: Leitwarte
+options:
+  bundleIdPrefix: tech.leitwarte
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "0.3.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # Signatur erfolgt nach dem Bauen per codesign (wie beim Menüleisten-Programm),
+    # damit kein Provisioning-Profil nötig ist.
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    OTHER_LDFLAGS: "-framework IOKit"
+
+targets:
+  Leitwarte:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Sources/App
+    dependencies:
+      - target: LeitwarteWidget
+    info:
+      path: Sources/App/Info.plist
+      properties:
+        CFBundleName: Leitwarte
+        CFBundleDisplayName: Leitwarte
+        CFBundleShortVersionString: "0.3.0"
+        CFBundleVersion: "1"
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tech.leitwarte.app
+        CODE_SIGN_ENTITLEMENTS: Sources/App/App.entitlements
+
+  LeitwarteWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Sources/Widget
+    info:
+      path: Sources/Widget/Info.plist
+      properties:
+        CFBundleName: LeitwarteWidget
+        CFBundleDisplayName: Leitwarte
+        CFBundleShortVersionString: "0.3.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tech.leitwarte.app.widget
+        CODE_SIGN_ENTITLEMENTS: Sources/Widget/Widget.entitlements

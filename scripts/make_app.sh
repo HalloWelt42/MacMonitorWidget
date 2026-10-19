@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Baut Leitwarte (Menüleisten-Programm + Schreibtisch-Widget) über XcodeGen und
+# xcodebuild, signiert beide Teile mit den passenden Entitlements und installiert
+# nach /Applications. Aufruf: scripts/make_app.sh [Release|Debug]
+#
+# Hintergrund: Ein WidgetKit-Widget braucht eine eingebettete App-Erweiterung; das
+# geht nicht mit reinem SwiftPM. Die Erweiterung MUSS in der Sandbox laufen (sonst
+# weist macOS sie ab) - deshalb teilt das (unsandboxed) Programm die Messwerte über
+# eine App-Gruppe mit dem (sandboxed) Widget.
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root"
+config="${1:-Release}"
+derived=".build-xcode"
+app="${derived}/Build/Products/${config}/Leitwarte.app"
+
+# Stabile Signaturidentität bevorzugen, sonst ad-hoc.
+if [ -n "${LEITWARTE_SIGN_ID:-}" ]; then
+    SIGN_ID="$LEITWARTE_SIGN_ID"
+elif security find-identity -p codesigning -v 2>/dev/null | grep -q "Lichtspiel Dev"; then
+    SIGN_ID="Lichtspiel Dev"
+else
+    SIGN_ID="-"
+fi
+
+xcodegen generate
+xcodebuild -project Leitwarte.xcodeproj -scheme Leitwarte -configuration "$config" \
+    -derivedDataPath "$derived" CODE_SIGNING_ALLOWED=NO build
+
+echo "signing as: ${SIGN_ID}"
+# Erst die eingebettete Erweiterung (mit Sandbox + App-Gruppe), dann die App.
+codesign --force --sign "$SIGN_ID" --entitlements Sources/Widget/Widget.entitlements \
+    "${app}/Contents/PlugIns/LeitwarteWidget.appex"
+codesign --force --sign "$SIGN_ID" --entitlements Sources/App/App.entitlements "$app"
+codesign --verify --deep --strict "$app" && echo "Signatur gültig"
+
+# Nach /Applications installieren und laufende Instanz ersetzen.
+dest="/Applications/Leitwarte.app"
+pkill -f "${dest}/Contents/MacOS/Leitwarte" 2>/dev/null || true
+rm -rf "$dest"
+ditto "$app" "$dest"
+xattr -cr "$dest" >/dev/null 2>&1 || true
+
+LSREG="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+[ -x "$LSREG" ] && "$LSREG" -f "$dest"
+
+echo "installed ${dest}"
+open "$dest"
