@@ -165,7 +165,7 @@ private struct PanelPreview: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Circle().fill(.green).frame(width: 6, height: 6)
-                Text("Leitwarte").font(.system(size: 12, weight: .medium))
+                Text("MacMonitorWidget").font(.system(size: 12, weight: .medium))
                 Spacer()
                 Text("1 s").font(.system(size: 11)).foregroundStyle(.secondary)
             }

@@ -74,7 +74,7 @@ final class AppConfig: ObservableObject {
     @Published var intervalSeconds: Double { didSet { save() } }
     @Published var menuBarStyle: MenuBarStyle { didSet { save() } }
 
-    private static let storageKey = "leitwarte.config.v1"
+    private static let storageKey = "macmonitorwidget.config.v1"
 
     init() {
         if let stored = Self.loadStored() {

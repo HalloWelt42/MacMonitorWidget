@@ -1,6 +1,6 @@
 import Foundation
 
-// Einstiegspunkt. Mit "--dump" (oder LEITWARTE_DUMP) läuft die App kopflos: sie
+// Einstiegspunkt. Mit "--dump" (oder MACMONITORWIDGET_DUMP) läuft die App kopflos: sie
 // misst einmal, gibt die Werte auf der Konsole aus und beendet sich. So lassen
 // sich die Sampler ohne Menüleisten-Klick verifizieren.
 @main
@@ -8,15 +8,15 @@ enum EntryPoint {
     static func main() {
         let arguments = CommandLine.arguments
         let dumpRequested = arguments.contains("--dump")
-            || ProcessInfo.processInfo.environment["LEITWARTE_DUMP"] != nil
+            || ProcessInfo.processInfo.environment["MACMONITORWIDGET_DUMP"] != nil
         if dumpRequested {
             DumpMode.run()
         }
         if let index = arguments.firstIndex(of: "--snapshot") {
-            let directory = arguments.count > index + 1 ? arguments[index + 1] : "/tmp/leitwarte-shots"
+            let directory = arguments.count > index + 1 ? arguments[index + 1] : "/tmp/macmonitorwidget-shots"
             MainActor.assumeIsolated { SnapshotMode.run(outputDirectory: directory) }
         }
-        LeitwarteApp.main()
+        MacMonitorWidgetApp.main()
     }
 }
 
@@ -30,7 +30,7 @@ enum DumpMode {
         let snap = measurement.snapshot
         let sample = measurement.chipSample
 
-        print("== Leitwarte Dump ==")
+        print("== MacMonitorWidget Dump ==")
         print("Chip       : \(chip.headline)")
         print("Takt E/P   : \(mhzList(chip.eFrequencies)) | \(mhzList(chip.pFrequencies))")
         print("Takt GPU   : \(mhzList(chip.gpuFrequencies))")

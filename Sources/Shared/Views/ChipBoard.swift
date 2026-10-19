@@ -25,7 +25,7 @@ struct ChipBoard: View {
     }
 
     private var usageBlock: some View {
-        TerminalBox(left: chip.headline, right: version.isEmpty ? "Leitwarte" : "Leitwarte v\(version)") {
+        TerminalBox(left: chip.headline, right: version.isEmpty ? "MacMonitorWidget" : "MacMonitorWidget v\(version)") {
             Grid(horizontalSpacing: 6, verticalSpacing: 4) {
                 GridRow {
                     frequencyBox("\(chip.eLabel)-CPU", series: \.eCluster)
@@ -108,7 +108,7 @@ struct ChipBoard: View {
     // Alter der Werte; die Zeitangabe zählt im Widget von selbst weiter.
     private var statusText: Text? {
         guard let date = trace.samples.last?.date else {
-            return Text("Leitwarte starten, um Messwerte zu erhalten")
+            return Text("MacMonitorWidget starten, um Messwerte zu erhalten")
         }
         if Date().timeIntervalSince(date) > staleAfter {
             return Text("Messprogramm beendet, Stand vor ") + Text(date, style: .relative)

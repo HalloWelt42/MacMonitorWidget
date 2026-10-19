@@ -1,9 +1,9 @@
-<p align="center"><img src="docs/icon.png" width="160" alt="Leitwarte"></p>
+<p align="center"><img src="docs/icon.png" width="160" alt="MacMonitorWidget"></p>
 
-# Leitwarte
+# MacMonitorWidget
 
 Ein nativer Systemmonitor für macOS - als Menüleisten-Programm und als
-Schreibtisch-Widget. Leitwarte zeigt CPU-, RAM-, GPU-, Energieverbrauch und
+Schreibtisch-Widget. MacMonitorWidget zeigt CPU-, RAM-, GPU-, Energieverbrauch und
 Temperatur in frei zusammenstellbaren Anzeige-Bausteinen: Du wählst aus, welche
 Bausteine in welcher Reihenfolge erscheinen und welche Messwerte jeder zeigt.
 
@@ -96,9 +96,9 @@ Menüleisten-Programm läuft ohne Dock-Symbol.
 Zur kopflosen Kontrolle des Datenkerns gibt es einen Diagnosemodus:
 
 ```
-.build/debug/Leitwarte --dump             # Messwerte einmalig auf der Konsole
-.build/debug/Leitwarte --dump --channels  # zusätzlich alle IOReport-Kanäle und Fühler
-.build/debug/Leitwarte --snapshot DIR      # Bausteine und Widgets als PNG nach DIR
+.build/debug/MacMonitorWidget --dump             # Messwerte einmalig auf der Konsole
+.build/debug/MacMonitorWidget --dump --channels  # zusätzlich alle IOReport-Kanäle und Fühler
+.build/debug/MacMonitorWidget --snapshot DIR      # Bausteine und Widgets als PNG nach DIR
 ```
 
 Das Programmsymbol wird mit `swift tools/make_icon.swift` gezeichnet.
@@ -119,7 +119,7 @@ Font License 1.1 ([Sources/Widget/Fonts/OFL.txt](Sources/Widget/Fonts/OFL.txt)).
 
 ## Unterstützen
 
-Leitwarte ist ein privates Open-Source-Projekt. Kein Tracking, keine Werbung,
+MacMonitorWidget ist ein privates Open-Source-Projekt. Kein Tracking, keine Werbung,
 keine Kompromisse.
 
 Wenn dir das Projekt gefällt, kannst du direkt hier "Danke sagen":

@@ -5,23 +5,23 @@ import SwiftUI
 // eigenem Takt (wie Wetter), nicht sekündlich. Je Aktualisierung misst der Provider
 // einmal über ein kurzes Fenster.
 
-struct LeitwarteEntry: TimelineEntry {
+struct SystemEntry: TimelineEntry {
     let date: Date
     let snapshot: SystemSnapshot
 }
 
-struct LeitwarteProvider: TimelineProvider {
-    func placeholder(in context: Context) -> LeitwarteEntry {
-        LeitwarteEntry(date: Date(), snapshot: Self.exampleSnapshot)
+struct SystemProvider: TimelineProvider {
+    func placeholder(in context: Context) -> SystemEntry {
+        SystemEntry(date: Date(), snapshot: Self.exampleSnapshot)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (LeitwarteEntry) -> Void) {
+    func getSnapshot(in context: Context, completion: @escaping (SystemEntry) -> Void) {
         let snapshot = context.isPreview ? Self.exampleSnapshot : currentSnapshot()
-        completion(LeitwarteEntry(date: Date(), snapshot: snapshot))
+        completion(SystemEntry(date: Date(), snapshot: snapshot))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<LeitwarteEntry>) -> Void) {
-        let entry = LeitwarteEntry(date: Date(), snapshot: currentSnapshot())
+    func getTimeline(in context: Context, completion: @escaping (Timeline<SystemEntry>) -> Void) {
+        let entry = SystemEntry(date: Date(), snapshot: currentSnapshot())
         // So bald wie sinnvoll erneut anfragen; das System drosselt nach eigenem Budget.
         let next = Date().addingTimeInterval(60)
         completion(Timeline(entries: [entry], policy: .after(next)))
@@ -48,9 +48,9 @@ struct LeitwarteProvider: TimelineProvider {
     }
 }
 
-struct LeitwarteWidgetEntryView: View {
+struct SystemWidgetEntryView: View {
     @Environment(\.widgetFamily) private var family
-    var entry: LeitwarteEntry
+    var entry: SystemEntry
 
     var body: some View {
         // Transparenter Hintergrund: das System legt den eingestellten
@@ -72,21 +72,21 @@ struct LeitwarteWidgetEntryView: View {
     }
 }
 
-struct LeitwarteWidget: Widget {
+struct SystemWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "tech.leitwarte.widget", provider: LeitwarteProvider()) { entry in
-            LeitwarteWidgetEntryView(entry: entry)
+        StaticConfiguration(kind: "tech.macmonitorwidget.widget", provider: SystemProvider()) { entry in
+            SystemWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Leitwarte")
+        .configurationDisplayName("MacMonitorWidget")
         .description("CPU, RAM, GPU, Energie und Temperatur auf dem Schreibtisch.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
 @main
-struct LeitwarteWidgetBundle: WidgetBundle {
+struct WidgetsBundle: WidgetBundle {
     var body: some Widget {
-        LeitwarteWidget()
+        SystemWidget()
         ChipWidget()
     }
 }

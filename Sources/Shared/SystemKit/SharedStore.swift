@@ -5,7 +5,7 @@ import Foundation
 // Widget liest sie dort - so zeigt das Widget auch die Werte, die es in der
 // Sandbox nicht selbst messen darf (GPU, Takt, Energie, Temperatur).
 enum SharedStore {
-    static let appGroup = "group.tech.leitwarte.app"
+    static let appGroup = "group.tech.macmonitorwidget.app"
 
     // Je Inhalt eine Datei: Momentaufnahme für die Bausteine, Verlauf für die Chip-Übersicht.
     enum Entry: String {

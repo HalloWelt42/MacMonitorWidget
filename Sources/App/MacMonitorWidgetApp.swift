@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct LeitwarteApp: App {
+struct MacMonitorWidgetApp: App {
     @StateObject private var sampler = SystemSampler()
     @StateObject private var config = AppConfig()
 

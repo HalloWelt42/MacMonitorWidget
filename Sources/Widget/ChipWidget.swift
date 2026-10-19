@@ -12,7 +12,7 @@ struct ChipEntry: TimelineEntry {
 }
 
 struct ChipProvider: TimelineProvider {
-    private static let log = Logger(subsystem: "tech.leitwarte.app.widget", category: "chip")
+    private static let log = Logger(subsystem: "tech.macmonitorwidget.app.widget", category: "chip")
 
     func placeholder(in context: Context) -> ChipEntry {
         ChipEntry(date: Date(), trace: currentTrace())
@@ -54,10 +54,10 @@ struct ChipWidgetView: View {
 
 struct ChipWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "tech.leitwarte.chip", provider: ChipProvider()) { entry in
+        StaticConfiguration(kind: "tech.macmonitorwidget.chip", provider: ChipProvider()) { entry in
             ChipWidgetView(entry: entry)
         }
-        .configurationDisplayName("Leitwarte Chip")
+        .configurationDisplayName("MacMonitorWidget Chip")
         .description("Auslastung und Takt der CPU-Cluster und GPU, Speicher und Leistung mit Verlauf.")
         .supportedFamilies([.systemExtraLarge])
         .contentMarginsDisabled()

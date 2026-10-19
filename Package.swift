@@ -5,11 +5,11 @@ import PackageDescription
 // --dump/--snapshot-Pfad. Das Schreibtisch-Widget wird über XcodeGen gebaut, weil
 // SwiftPM keine App-Erweiterung (.appex) bündeln kann.
 let package = Package(
-    name: "Leitwarte",
+    name: "MacMonitorWidget",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "Leitwarte",
+            name: "MacMonitorWidget",
             path: "Sources",
             exclude: ["Widget", "App/Info.plist", "App/App.entitlements"],
             sources: ["Shared", "App"],
