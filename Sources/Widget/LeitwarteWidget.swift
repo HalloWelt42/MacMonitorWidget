@@ -30,7 +30,7 @@ struct LeitwarteProvider: TimelineProvider {
     // Bevorzugt die vom Programm geteilten Vollwerte; sonst selbst CPU/RAM messen
     // (alles andere ist dem Widget in der Sandbox verwehrt).
     private func currentSnapshot() -> SystemSnapshot {
-        SnapshotStore.read() ?? SyncSampler.snapshot()
+        SharedStore.read(SystemSnapshot.self, from: .snapshot) ?? SyncSampler.snapshot()
     }
 
     static var exampleSnapshot: SystemSnapshot {

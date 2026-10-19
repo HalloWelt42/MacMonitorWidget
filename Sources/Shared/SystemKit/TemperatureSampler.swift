@@ -80,6 +80,17 @@ final class TemperatureSampler {
         return chosen.map { $0.celsius }.reduce(0, +) / Double(chosen.count)
     }
 
+    // Ersatz, wenn der SMC keine Temperaturfühler liefert: Mittel der
+    // Cluster-Fühler (pACC/eACC) für die CPU und der GPU-Fühler; 0 ohne Fühler.
+    func clusterTemperatures() -> (cpu: Double, gpu: Double) {
+        let sensors = readSensors()
+        func average(_ prefixes: [String]) -> Double {
+            let values = sensors.filter { sensor in prefixes.contains { sensor.name.hasPrefix($0) } }.map(\.celsius)
+            return values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
+        }
+        return (average(["pACC MTR Temp Sensor", "eACC MTR Temp Sensor"]), average(["GPU MTR Temp Sensor"]))
+    }
+
     private func isDieSensor(_ name: String) -> Bool {
         let lower = name.lowercased()
         return lower.contains("die")    // tdie* = Silizium-Die-Sensoren (Apple Silicon)

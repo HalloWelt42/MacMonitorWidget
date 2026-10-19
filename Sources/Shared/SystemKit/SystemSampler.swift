@@ -8,13 +8,9 @@ import WidgetKit
 final class SystemSampler: ObservableObject {
     @Published private(set) var snapshot = SystemSnapshot()
     @Published private(set) var history = MetricHistory()
+    private(set) var chipTrace: ChipTrace
 
-    private let cpu = CPUSampler()
-    private let memory = MemorySampler()
-    private let gpu = GPUSampler()
-    private let power = PowerSampler()
-    private let temperature = TemperatureSampler()
-    private let smc = SMCSampler()
+    private let probe: SystemProbe
 
     private var timer: Timer?
     private var started = false
@@ -22,16 +18,16 @@ final class SystemSampler: ObservableObject {
     private(set) var interval: TimeInterval = 1.0
 
     init() {
+        let chip = ChipInfoReader.read()
+        probe = SystemProbe(chip: chip)
+        chipTrace = ChipTrace(chip: chip)
         start()
     }
 
     func start() {
         guard !started else { return }
         started = true
-        power.start()
-        temperature.start()
-        smc.start()
-        tick()          // Grundlinie setzen
+        probe.start()   // Grundlinien; der erste Messpunkt folgt nach einem Takt
         schedule()
     }
 
@@ -53,37 +49,15 @@ final class SystemSampler: ObservableObject {
     }
 
     private func tick() {
-        let cpuReading = cpu.sample()
-        let memoryReading = memory.sample()
-        let gpuReading = gpu.sample()
-        let powerReading = power.sample()
-
-        var snap = SystemSnapshot()
-        snap.cpu = cpuReading.total
-        snap.perCore = cpuReading.perCore
-        snap.ramFraction = memoryReading.fraction
-        snap.ramUsedBytes = memoryReading.usedBytes
-        snap.ramTotalBytes = memoryReading.totalBytes
-        snap.gpu = gpuReading
-        // Energie zeigt die gesamte Systemleistung (SMC), sonst die Rechenleistung.
-        snap.powerWatts = smc.systemPower() ?? powerReading.package
-        snap.cpuWatts = powerReading.cpu
-        snap.gpuWatts = powerReading.gpu
-        snap.temperature = temperature.sample()
-        snap.swapUsedBytes = memoryReading.swapUsedBytes
-        snap.swapTotalBytes = memoryReading.swapTotalBytes
-        snap.swapFraction = memoryReading.swapFraction
-        if let fan = smc.fan() {
-            snap.fanRPM = fan.rpm
-            snap.fanMaxRPM = fan.maxRPM
-        }
-
-        snapshot = snap
-        history.append(snap)
+        let measurement = probe.measure()
+        snapshot = measurement.snapshot
+        history.append(measurement.snapshot)
+        chipTrace.append(measurement.chipSample)
 
         // Für das Schreibtisch-Widget in den geteilten Speicher schreiben und das
         // Widget gelegentlich zum Aktualisieren anstoßen (das System drosselt selbst).
-        SnapshotStore.write(snap)
+        SharedStore.write(measurement.snapshot, as: .snapshot)
+        SharedStore.write(chipTrace, as: .chipTrace)
         tickCount += 1
         if tickCount % 60 == 0 {
             WidgetCenter.shared.reloadAllTimelines()

@@ -2,7 +2,8 @@ import Foundation
 import IOKit
 
 // Liest Werte aus dem System Management Controller (SMC): die Systemleistung
-// ("PSTR", Watt) und die Lüfterdrehzahlen. Apple-Silicon, sudolos.
+// ("PSTR", Watt), die Lüfterdrehzahlen und die CPU-/GPU-Temperaturfühler.
+// Apple-Silicon, sudolos.
 //
 // Die SMC-Datenstruktur (KeyData, 80 Byte) wird nicht als Swift-Struct
 // nachgebildet, sondern offsetbasiert in einem Rohpuffer beschrieben/gelesen.
@@ -16,6 +17,8 @@ final class SMCSampler {
     private var connection: io_connect_t = 0
     private(set) var available = false
     private var fanKeys: [String] = []
+    private var cpuTemperatureKeys: [String] = []
+    private var gpuTemperatureKeys: [String] = []
 
     private let structSize = 80
     // Offsets in der KeyData-Struktur (#[repr(C)]).
@@ -50,15 +53,33 @@ final class SMCSampler {
             device = IOIteratorNext(iterator)
         }
 
-        // Lüfter-Schlüssel einmalig ermitteln (F<n>Ac) - die Aufzählung ist teuer.
+        // Schlüssel einmalig ermitteln - die Aufzählung ist teuer.
         if available {
-            fanKeys = enumerateFanKeys()
+            discoverKeys()
         }
+    }
+
+    // Ob der SMC Temperaturfühler für die CPU liefert (sonst bleibt nur IOHID).
+    var hasTemperatureKeys: Bool { !cpuTemperatureKeys.isEmpty }
+
+    // Mittlere CPU- und GPU-Temperatur in Grad Celsius; 0, wenn kein Fühler gültig ist.
+    func temperatures() -> (cpu: Double, gpu: Double) {
+        (averageTemperature(cpuTemperatureKeys), averageTemperature(gpuTemperatureKeys))
+    }
+
+    private func averageTemperature(_ keys: [String]) -> Double {
+        let values = keys.compactMap { numeric($0) }.filter { $0 > 0 && $0 <= 150 }
+        return values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
     }
 
     // Gesamte Systemleistung in Watt oder nil.
     func systemPower() -> Double? {
         numeric("PSTR")
+    }
+
+    // Drehzahl je Lüfter in fester Reihenfolge.
+    func fanSpeeds() -> [Int] {
+        fans().map { Int($0.rpm) }
     }
 
     // Durchschnittliche Lüfterdrehzahl (U/min) und höchste gemeldete Maximaldrehzahl.
@@ -141,17 +162,29 @@ final class SMCSampler {
         return String(decoding: bytes, as: UTF8.self)
     }
 
-    private func enumerateFanKeys() -> [String] {
+    // Lüfter: F<n>Ac. Temperatur: welche Fühler wofür stehen, ist nicht
+    // dokumentiert; üblich sind "Tp"/"Te"/"Ts" für die CPU und "Tg" für die GPU,
+    // jeweils nur Schlüssel, die als 4-Byte-Gleitkommazahl lesbar sind.
+    private func discoverKeys() {
         let count = keyCount()
-        guard count > 0, count < 100_000 else { return [] }
-        var keys: [String] = []
+        guard count > 0, count < 100_000 else { return }
+        var fans = Set<String>()
         for index in 0..<UInt32(count) {
-            guard let key = keyByIndex(index) else { continue }
-            if key.count == 4, key.hasPrefix("F"), key.hasSuffix("Ac") {
-                keys.append(key)
+            guard let key = keyByIndex(index), key.count == 4 else { continue }
+            if key.hasPrefix("F"), key.hasSuffix("Ac") {
+                fans.insert(key)
+                continue
+            }
+            let isCPU = key.hasPrefix("Tp") || key.hasPrefix("Te") || key.hasPrefix("Ts")
+            let isGPU = key.hasPrefix("Tg")
+            guard isCPU || isGPU, let raw = readRaw(key), raw.type == "flt ", raw.bytes.count == 4 else { continue }
+            if isCPU {
+                cpuTemperatureKeys.append(key)
+            } else {
+                gpuTemperatureKeys.append(key)
             }
         }
-        return keys.sorted()
+        fanKeys = fans.sorted()
     }
 
     private func call(_ input: [UInt8]) -> [UInt8]? {

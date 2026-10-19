@@ -7,7 +7,8 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.3.0"
+    # Version kommt aus version.json (scripts/make_app.sh reicht sie an xcodebuild).
+    MARKETING_VERSION: "0.0.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     # Signatur erfolgt nach dem Bauen per codesign (wie beim Menüleisten-Programm),
@@ -30,7 +31,7 @@ targets:
       properties:
         CFBundleName: Leitwarte
         CFBundleDisplayName: Leitwarte
-        CFBundleShortVersionString: "0.3.0"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "1"
         LSUIElement: true
         LSMinimumSystemVersion: "14.0"
@@ -50,7 +51,7 @@ targets:
       properties:
         CFBundleName: LeitwarteWidget
         CFBundleDisplayName: Leitwarte
-        CFBundleShortVersionString: "0.3.0"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "14.0"
         NSExtension:

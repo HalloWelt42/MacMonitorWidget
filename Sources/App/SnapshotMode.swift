@@ -6,47 +6,27 @@ import AppKit
 // Vorschaubildern für die Dokumentation.
 @MainActor
 enum SnapshotMode {
+    // Genug Messpunkte, damit die Verläufe der Chip-Übersicht gefüllt sind.
+    private static let sampleCount = 60
+    private static let sampleInterval: useconds_t = 120_000
+
     static func run(outputDirectory: String) -> Never {
         _ = NSApplication.shared
 
         // Etwas Verlauf aufbauen und eine aktuelle Momentaufnahme bilden.
-        let cpu = CPUSampler()
-        let memory = MemorySampler()
-        let gpu = GPUSampler()
-        let power = PowerSampler()
-        let temperature = TemperatureSampler()
-        let smc = SMCSampler()
-        _ = cpu.sample()
-        power.start()
-        temperature.start()
-        smc.start()
+        let chip = ChipInfoReader.read()
+        let probe = SystemProbe(chip: chip)
+        probe.start()
 
         var history = MetricHistory()
+        var trace = ChipTrace(chip: chip)
         var snapshot = SystemSnapshot()
-        for _ in 0..<28 {
-            usleep(70_000)
-            let cpuReading = cpu.sample()
-            let memoryReading = memory.sample()
-            snapshot = SystemSnapshot()
-            snapshot.cpu = cpuReading.total
-            snapshot.perCore = cpuReading.perCore
-            snapshot.ramFraction = memoryReading.fraction
-            snapshot.ramUsedBytes = memoryReading.usedBytes
-            snapshot.ramTotalBytes = memoryReading.totalBytes
-            snapshot.gpu = gpu.sample()
-            let powerReading = power.sample()
-            snapshot.powerWatts = smc.systemPower() ?? powerReading.package
-            snapshot.cpuWatts = powerReading.cpu
-            snapshot.gpuWatts = powerReading.gpu
-            snapshot.temperature = temperature.sample()
-            snapshot.swapUsedBytes = memoryReading.swapUsedBytes
-            snapshot.swapTotalBytes = memoryReading.swapTotalBytes
-            snapshot.swapFraction = memoryReading.swapFraction
-            if let fan = smc.fan() {
-                snapshot.fanRPM = fan.rpm
-                snapshot.fanMaxRPM = fan.maxRPM
-            }
+        for _ in 0..<sampleCount {
+            usleep(sampleInterval)
+            let measurement = probe.measure()
+            snapshot = measurement.snapshot
             history.append(snapshot)
+            trace.append(measurement.chipSample)
         }
 
         try? FileManager.default.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true)

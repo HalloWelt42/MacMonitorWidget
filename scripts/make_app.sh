@@ -24,9 +24,12 @@ else
     SIGN_ID="-"
 fi
 
+version="$(python3 -c 'import json; print(json.load(open("version.json"))["version"])')"
+echo "version: ${version}"
+
 xcodegen generate
 xcodebuild -project Leitwarte.xcodeproj -scheme Leitwarte -configuration "$config" \
-    -derivedDataPath "$derived" CODE_SIGNING_ALLOWED=NO build
+    -derivedDataPath "$derived" CODE_SIGNING_ALLOWED=NO MARKETING_VERSION="$version" build
 
 echo "signing as: ${SIGN_ID}"
 # Erst die eingebettete Erweiterung (mit Sandbox + App-Gruppe), dann die App.
